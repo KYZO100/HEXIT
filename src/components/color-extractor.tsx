@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Loader2, Image as ImageIcon, Palette, Copy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
 
 interface ColorResult {
   imageUrl: string;
@@ -17,6 +18,7 @@ export default function ColorExtractor() {
   const [url, setUrl] = useState('');
   const [result, setResult] = useState<ColorResult | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [imageError, setImageError] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -32,6 +34,7 @@ export default function ColorExtractor() {
     
     startTransition(async () => {
       setResult(null);
+      setImageError(false);
       try {
         const response = await fetch(`/v2?url=${encodeURIComponent(url)}`);
         if (!response.ok) {
@@ -109,11 +112,20 @@ export default function ColorExtractor() {
             {!isPending && result && (
               <div className="w-full">
                 <div data-ai-hint="abstract background" className="relative aspect-video w-full overflow-hidden rounded-lg mb-6 border bg-muted/30">
-                    <img
-                        src={result.imageUrl}
-                        alt="Analyzed image"
-                        className="h-full w-full object-contain"
+                  {result.imageUrl && !imageError ? (
+                    <Image
+                      src={result.imageUrl}
+                      alt="Analyzed image"
+                      className="h-full w-full object-contain"
+                      fill
+                      onError={() => setImageError(true)}
                     />
+                  ) : (
+                     <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <ImageIcon className="w-12 h-12" />
+                      <span className="ml-2">Could not load image</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-center items-start gap-4 sm:gap-8">
                   {result.colors.map((color) => (
