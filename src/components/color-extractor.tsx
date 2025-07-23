@@ -37,10 +37,14 @@ export default function ColorExtractor() {
       setImageError(false);
       try {
         const response = await fetch(`/v2?url=${encodeURIComponent(url)}`);
-        const data = await response.json();
+        
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch colors.');
+          // Await the JSON body here to get the error message.
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch colors.');
         }
+
+        const data: ColorResult = await response.json();
         setResult(data);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
