@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const imageBuffer = await fetchImage(imageUrl);
     const palette = await Vibrant.from(Buffer.from(imageBuffer)).getPalette();
     
-    const colors: string[] = [];
+    const allColors: string[] = [];
     const prioritizedSwatches = [
         palette.Vibrant,
         palette.Muted,
@@ -44,33 +44,33 @@ export async function GET(request: NextRequest) {
     ];
 
     for (const swatch of prioritizedSwatches) {
-        if (isValidSwatch(swatch) && colors.length < 2) {
+        if (isValidSwatch(swatch)) {
             const hex = swatch.getHex();
-            if (!colors.includes(hex)) {
-                colors.push(hex);
+            if (!allColors.includes(hex)) {
+                allColors.push(hex);
             }
         }
     }
-    
-    if (colors.length < 2) {
-      const allSwatches = Object.values(palette).filter(isValidSwatch);
-      for (const swatch of allSwatches) {
-        if (colors.length < 2) {
-          const hex = swatch.getHex();
-          if (!colors.includes(hex)) {
-            colors.push(hex);
-          }
+
+    if (allColors.length < 2) {
+      const allAvailableSwatches = Object.values(palette).filter(isValidSwatch);
+      for (const swatch of allAvailableSwatches) {
+        const hex = swatch.getHex();
+        if (!allColors.includes(hex)) {
+            allColors.push(hex);
         }
       }
     }
+    
+    const finalColors = allColors.slice(0, 2);
 
-    if (colors.length === 0) {
+    if (finalColors.length === 0) {
         return NextResponse.json({ error: 'Could not extract any dominant colors from the image.' }, { status: 422 });
     }
 
     return NextResponse.json({
       imageUrl,
-      colors,
+      colors: finalColors,
     });
 
   } catch (error: any) {
