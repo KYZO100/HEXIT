@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'ColorEye',
-  description: 'Extract dominant colors from any image.',
+  title: 'HEXIT',
+  description: 'Extract dominant colors and generate palettes from any image.',
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light">
+    <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased ${inter.variable}`}>
         {children}
         <Toaster />
