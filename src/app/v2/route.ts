@@ -15,16 +15,17 @@ export async function GET(request: NextRequest) {
     const palette = await Vibrant.from(imageUrl).getPalette();
     const colors: string[] = [];
 
-    const swatches = [
+    // Prioritize specific swatches that often give good results
+    const prioritizedSwatches = [
         palette.Vibrant,
+        palette.Muted,
         palette.DarkVibrant,
         palette.LightVibrant,
-        palette.Muted,
         palette.DarkMuted,
         palette.LightMuted,
     ];
 
-    for (const swatch of swatches) {
+    for (const swatch of prioritizedSwatches) {
         if (swatch && colors.length < 2) {
             const hex = swatch.getHex();
             if (!colors.includes(hex)) {
@@ -33,10 +34,14 @@ export async function GET(request: NextRequest) {
         }
     }
 
+    // If we still don't have enough colors, fall back to the most populous ones
     if (colors.length < 2) {
-        const sortedSwatches = Object.values(palette).filter(Boolean).sort((a, b) => b.population - a.population);
+        const sortedSwatches = Object.values(palette)
+            .filter((swatch): swatch is NonNullable<typeof swatch> => !!swatch)
+            .sort((a, b) => (b.population || 0) - (a.population || 0));
+
         for(const swatch of sortedSwatches) {
-            if (swatch && colors.length < 2) {
+            if (colors.length < 2) {
                 const hex = swatch.getHex();
                 if (!colors.includes(hex)) {
                     colors.push(hex);
@@ -46,6 +51,7 @@ export async function GET(request: NextRequest) {
     }
     
     if (colors.length === 0) {
+        // This case should be rare, but it's good practice to handle it.
         return NextResponse.json({ error: 'Could not extract any dominant colors from the image.' }, { status: 422 });
     }
 
@@ -53,11 +59,16 @@ export async function GET(request: NextRequest) {
       imageUrl,
       colors,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[COLOR_API_ERROR]', error);
     let errorMessage = 'Failed to process image from URL.';
-    if (error instanceof Error && error.message.includes('file type')) {
-        errorMessage = 'Invalid or unsupported image type.'
+    // Provide more specific error messages for common issues
+    if (error && error.message) {
+      if (error.message.toLowerCase().includes('unsupported image type')) {
+        errorMessage = 'Unsupported image format. Please try a different image (e.g., JPEG, PNG).';
+      } else if (error.message.toLowerCase().includes('invalid image response')) {
+        errorMessage = 'Could not fetch the image from the provided URL. Please check the link and try again.';
+      }
     }
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
