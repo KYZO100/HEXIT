@@ -42,6 +42,14 @@ export default function Home() {
             </div>
 
             <div>
+              <h3 className="text-2xl font-semibold text-white mb-3">Supported Formats</h3>
+              <p>
+                The API officially supports the following image formats: <code className="font-mono bg-neutral-800/80 border border-neutral-700 text-amber-300 px-2 py-1 rounded-md">JPEG</code>, <code className="font-mono bg-neutral-800/80 border border-neutral-700 text-amber-300 px-2 py-1 rounded-md">PNG</code>, and <code className="font-mono bg-neutral-800/80 border border-neutral-700 text-amber-300 px-2 py-1 rounded-md">GIF</code>. Other formats like WebP may work but are not guaranteed.
+              </p>
+            </div>
+
+
+            <div>
               <h3 className="text-2xl font-semibold text-white mb-3">Example Request</h3>
               <pre className="bg-neutral-900/80 p-4 rounded-lg border border-neutral-700 text-white overflow-x-auto">
                 <code>{`fetch('/v2?url=https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d')`}</code>
@@ -58,16 +66,6 @@ export default function Home() {
     "#384350",
     "#788390"
   ]
-}`}
-                </code>
-              </pre>
-            </div>
-             <div>
-              <h3 className="text-2xl font-semibold text-white mb-3">Error Response (4xx/5xx)</h3>
-              <pre className="bg-neutral-900/80 p-4 rounded-lg border border-neutral-700 text-white overflow-x-auto">
-                <code>
-{`{
-  "error": "Descriptive error message about what went wrong."
 }`}
                 </code>
               </pre>
