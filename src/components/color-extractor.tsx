@@ -3,9 +3,8 @@
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Image as ImageIcon, Palette, Copy, Link as LinkIcon, AlertTriangle } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, Palette, Copy, Link as LinkIcon, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 
 interface ColorResult {
@@ -16,43 +15,34 @@ interface ColorResult {
 export default function ColorExtractor() {
   const [url, setUrl] = useState('');
   const [result, setResult] = useState<ColorResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [imageError, setImageError] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!url) {
-        toast({
-            title: "Error",
-            description: "Please enter an image URL.",
-            variant: "destructive",
-        });
+        setError("Please enter an image URL.");
         return;
     }
     
     startTransition(async () => {
       setResult(null);
+      setError(null);
       setImageError(false);
       try {
         const response = await fetch(`/v2?url=${encodeURIComponent(url)}`);
         
+        const data = await response.json();
+
         if (!response.ok) {
-          // Await the JSON body here to get the error message.
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch colors.');
+          throw new Error(data.error || 'Failed to fetch colors.');
         }
 
-        const data: ColorResult = await response.json();
         setResult(data);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive",
-        });
-        console.error(error);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(errorMessage);
         setResult(null);
       }
     });
@@ -92,6 +82,13 @@ export default function ColorExtractor() {
               {isPending ? <Loader2 className="animate-spin" /> : "Extract Colors"}
             </Button>
           </form>
+
+          {error && (
+            <div className="mt-4 text-center text-destructive bg-destructive/20 border border-destructive/50 p-3 rounded-md flex items-center justify-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                <span>{error}</span>
+            </div>
+           )}
 
           <div className="mt-8 min-h-[400px] flex items-center justify-center rounded-xl bg-black/20 p-4 border-dashed border-2 border-neutral-800">
             {isPending && (
@@ -146,7 +143,7 @@ export default function ColorExtractor() {
               </div>
             )}
 
-            {!isPending && !result && (
+            {!isPending && !result && !error && (
               <div className="text-center text-neutral-500 p-8">
                 <Palette size={64} className="mx-auto mb-6 text-neutral-600" />
                 <p className="font-medium text-2xl text-neutral-300">Your color palette appears here</p>
