@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Image as ImageIcon, Palette, Copy, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Palette, Copy, Link as LinkIcon, AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
 
@@ -66,7 +66,7 @@ export default function ColorExtractor() {
   };
   
   return (
-    <div className="w-full max-w-3xl font-body z-10">
+    <div className="w-full max-w-3xl font-body z-10 p-4">
       <Card className="w-full shadow-2xl rounded-xl border-black/[0.1] dark:border-white/[0.1] bg-white/60 dark:bg-black/60 backdrop-blur-md">
         <CardHeader className="text-center">
             <div className="flex justify-center items-center gap-2 mb-2">
@@ -74,11 +74,11 @@ export default function ColorExtractor() {
                 <CardTitle className="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-slate-900 to-slate-600 dark:from-slate-200 dark:to-slate-400 bg-clip-text text-transparent">HEXIT</CardTitle>
             </div>
             <CardDescription className="text-muted-foreground text-lg">
-                Extract dominant colors from any image on the web.
+                Extract dominant colors and generate palettes from any image.
             </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
              <div className="relative flex-grow">
                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
@@ -88,18 +88,18 @@ export default function ColorExtractor() {
                   onChange={(e) => setUrl(e.target.value)}
                   disabled={isPending}
                   required
-                  className="pl-10 w-full text-base"
+                  className="pl-10 w-full h-12 text-base"
                 />
             </div>
-            <Button type="submit" disabled={isPending} size="lg" className="font-semibold">
-              {isPending ? <Loader2 className="animate-spin" /> : "Extract"}
+            <Button type="submit" disabled={isPending} size="lg" className="font-semibold h-12">
+              {isPending ? <Loader2 className="animate-spin" /> : "Extract Colors"}
             </Button>
           </form>
 
           <div className="mt-6 min-h-[350px] flex items-center justify-center rounded-lg bg-background/50 dark:bg-secondary/20 p-4 border-dashed border-2">
             {isPending && (
               <div className="w-full flex flex-col items-center justify-center text-muted-foreground">
-                  <Loader2 className="w-10 h-10 animate-spin mb-4" />
+                  <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
                   <p className="text-lg font-medium">Analyzing your image...</p>
                   <p className="text-sm">This might take a moment.</p>
               </div>
@@ -119,8 +119,8 @@ export default function ColorExtractor() {
                     />
                   ) : (
                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-secondary/30 p-4">
-                      <ImageIcon className="w-12 h-12 mb-2" />
-                      <span className="text-center font-medium">Could not load image preview</span>
+                      <AlertTriangle className="w-12 h-12 mb-2 text-destructive" />
+                      <span className="text-center font-medium">Could not load image preview.</span>
                     </div>
                   )}
                 </div>
@@ -132,6 +132,7 @@ export default function ColorExtractor() {
                         <button onClick={() => copyToClipboard(color)}
                           className="w-24 h-24 rounded-full shadow-lg transition-transform hover:scale-110 border-4 border-background"
                           style={{ backgroundColor: color }}
+                          aria-label={`Copy color ${color}`}
                         />
                         <button
                           onClick={() => copyToClipboard(color)}
@@ -148,7 +149,7 @@ export default function ColorExtractor() {
             )}
 
             {!isPending && !result && (
-              <div className="text-center text-muted-foreground">
+              <div className="text-center text-muted-foreground p-8">
                 <ImageIcon size={48} className="mx-auto mb-4" />
                 <p className="font-medium text-lg">Your extracted color palette will appear here.</p>
                 <p className="text-sm">Just paste an image URL above to get started.</p>
