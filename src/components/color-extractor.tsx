@@ -37,11 +37,10 @@ export default function ColorExtractor() {
       setImageError(false);
       try {
         const response = await fetch(`/v2?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch colors.');
+          throw new Error(data.error || 'Failed to fetch colors.');
         }
-        const data: ColorResult = await response.json();
         setResult(data);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
@@ -65,21 +64,21 @@ export default function ColorExtractor() {
   };
   
   return (
-    <div className="w-full max-w-2xl">
-      <Card className="w-full shadow-lg">
+    <div className="w-full max-w-2xl font-body">
+      <Card className="w-full shadow-lg rounded-xl">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-lg">
                 <Palette className="w-8 h-8 text-primary" />
             </div>
             <div className="flex flex-col">
-              <CardTitle className="text-3xl font-headline tracking-tight text-primary">ColorEye</CardTitle>
-              <CardDescription>Extract dominant colors from any image.</CardDescription>
+              <CardTitle className="text-3xl font-headline tracking-tight">ColorEye</CardTitle>
+              <CardDescription className="text-muted-foreground">Extract dominant colors from any image.</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
             <Input
               type="url"
               placeholder="e.g., https://images.unsplash.com/..."
@@ -87,9 +86,9 @@ export default function ColorExtractor() {
               onChange={(e) => setUrl(e.target.value)}
               disabled={isPending}
               required
-              className="flex-grow"
+              className="flex-grow text-base"
             />
-            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto font-semibold">
               {isPending ? <Loader2 className="animate-spin" /> : "Extract Colors"}
             </Button>
           </form>
@@ -118,6 +117,7 @@ export default function ColorExtractor() {
                       alt="Analyzed image"
                       className="h-full w-full object-contain"
                       fill
+                      unoptimized
                       onError={() => setImageError(true)}
                     />
                   ) : (
@@ -131,7 +131,7 @@ export default function ColorExtractor() {
                   {result.colors.map((color) => (
                     <div key={color} className="flex flex-col items-center gap-2 group">
                       <div
-                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg shadow-md transition-transform hover:scale-105 border"
+                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg shadow-md transition-transform hover:scale-105 border-2"
                         style={{ backgroundColor: color }}
                       />
                       <button
