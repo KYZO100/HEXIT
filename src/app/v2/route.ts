@@ -18,7 +18,7 @@ async function fetchImage(url: string) {
 }
 
 function isValidSwatch(swatch: Swatch | null | undefined): swatch is Swatch {
-    return !!swatch && typeof swatch.getHex === 'function';
+    return !!swatch && typeof swatch.getHex === 'function' && typeof swatch.population === 'number';
 }
 
 export async function GET(request: NextRequest) {
@@ -33,39 +33,28 @@ export async function GET(request: NextRequest) {
     const imageBuffer = await fetchImage(imageUrl);
     const palette = await Vibrant.from(Buffer.from(imageBuffer)).getPalette();
     
-    const allColors: string[] = [];
-    const prioritizedSwatches = [
-        palette.Vibrant,
-        palette.Muted,
-        palette.DarkVibrant,
-        palette.LightVibrant,
-        palette.DarkMuted,
-        palette.LightMuted,
-    ];
+    const validSwatches = Object.values(palette).filter(isValidSwatch);
 
-    for (const swatch of prioritizedSwatches) {
-        if (isValidSwatch(swatch)) {
-            const hex = swatch.getHex();
-            if (!allColors.includes(hex)) {
-                allColors.push(hex);
-            }
-        }
-    }
-
-    if (allColors.length < 2) {
-      const allAvailableSwatches = Object.values(palette).filter(isValidSwatch);
-      for (const swatch of allAvailableSwatches) {
-        const hex = swatch.getHex();
-        if (!allColors.includes(hex)) {
-            allColors.push(hex);
-        }
-      }
-    }
-    
-    const finalColors = allColors.slice(0, 2);
-
-    if (finalColors.length === 0) {
+    if (validSwatches.length === 0) {
         return NextResponse.json({ error: 'Could not extract any dominant colors from the image.' }, { status: 422 });
+    }
+
+    // Sort swatches by population (how much of the image the color takes up)
+    validSwatches.sort((a, b) => b.population - a.population);
+
+    const totalPopulation = validSwatches.reduce((sum, s) => sum + s.population, 0);
+    const mostDominant = validSwatches[0];
+
+    let finalColors: string[];
+
+    // If the most dominant color is overwhelmingly present (e.g., >80% of the palette),
+    // just return that single color. This is good for logos.
+    if (totalPopulation > 0 && (mostDominant.population / totalPopulation) > 0.8) {
+        finalColors = [mostDominant.getHex()];
+    } else {
+        // Otherwise, return the top 1 or 2 unique colors
+        const uniqueColors = [...new Set(validSwatches.map(s => s.getHex()))];
+        finalColors = uniqueColors.slice(0, 2);
     }
 
     return NextResponse.json({
