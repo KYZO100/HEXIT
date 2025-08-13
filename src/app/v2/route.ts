@@ -4,7 +4,6 @@ import { Swatch } from 'node-vibrant/lib/color';
 
 export const dynamic = 'force-dynamic';
 
-// Custom fetch with a user-agent to avoid some HTTP 403 errors
 async function fetchImage(url: string) {
     const response = await fetch(url, {
         headers: {
@@ -39,7 +38,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Could not extract any dominant colors from the image.' }, { status: 422 });
     }
 
-    // Sort swatches by population (how much of the image the color takes up)
     validSwatches.sort((a, b) => b.population - a.population);
 
     const totalPopulation = validSwatches.reduce((sum, s) => sum + s.population, 0);
@@ -47,12 +45,10 @@ export async function GET(request: NextRequest) {
 
     let finalColors: string[];
 
-    // If the most dominant color is overwhelmingly present (e.g., >80% of the palette),
-    // just return that single color. This is good for logos.
+
     if (totalPopulation > 0 && (mostDominant.population / totalPopulation) > 0.8) {
         finalColors = [mostDominant.getHex()];
     } else {
-        // Otherwise, return the top 1 or 2 unique colors
         const uniqueColors = [...new Set(validSwatches.map(s => s.getHex()))];
         finalColors = uniqueColors.slice(0, 2);
     }
